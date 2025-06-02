@@ -172,6 +172,16 @@ export const roundToTwo = (num: number) => {
   return Math.round(num * 100) / 100;
 };
 
+/**
+ * Parse block number that can be either decimal (123) or hexadecimal (0x7b)
+ */
+export const parseBlockNumber = (blockNumber: string): number => {
+  if (blockNumber.startsWith('0x') || blockNumber.startsWith('0X')) {
+    return Number(hexToNumber(blockNumber));
+  }
+  return parseInt(blockNumber, 10);
+};
+
 export const totalSupplyStr = (tokenInfo: ERC20TokenInfo) => {
   // TODO: write type guard to refactor the code
   const { totalSupply, decimals, symbol } = tokenInfo;

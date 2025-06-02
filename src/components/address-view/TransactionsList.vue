@@ -22,6 +22,7 @@ const props = defineProps<{
   showErigonDetailsTxnsWarning?: boolean;
   noAddresses?: boolean;
   firstTabText?: string;
+  ignoreOtsError?: boolean;
 }>();
 
 const handleTokenTransfersClick = () => {
@@ -63,7 +64,7 @@ const openPage = async (page: string) => {
         :isLastPage
         :loadingPage
         :currentPage
-        :disabled="appStore.otsApiError || loadingTxns || noAddresses || !transactions.length"
+        :disabled="(!ignoreOtsError && appStore.otsApiError) || loadingTxns || noAddresses || !transactions.length"
       />
     </div>
 
@@ -76,13 +77,13 @@ const openPage = async (page: string) => {
       Only Erigon RPC is supported for loading token transfers (for addresses under 10K txns)
     </div>
 
-    <div v-if="appStore.otsApiError" class="warning ots-api-warning">
+    <div v-if="!ignoreOtsError && appStore.otsApiError" class="warning ots-api-warning">
       <i class="bi bi-exclamation-triangle"></i>
       Transactions can not be loaded. Erigon OTS namespace is disabled or Ethereum node has
       limitations or Erigon error has occurred. Check Erigon or node logs.
     </div>
 
-    <div v-if="!appStore.otsApiError && !loadingTxns && !noAddresses && transactions.length">
+    <div v-if="(ignoreOtsError || !appStore.otsApiError) && !loadingTxns && !noAddresses && transactions.length">
       <div class="latest-transactions">
         <TransactionsListItem
           v-for="t in transactions"
@@ -103,7 +104,7 @@ const openPage = async (page: string) => {
     </div>
   </div>
 
-  <div class="loading-txns" v-if="loadingTxns && !appStore.otsApiError">
+  <div class="loading-txns" v-if="loadingTxns && (ignoreOtsError || !appStore.otsApiError)">
     <span>Loading transactions</span> <span class="spinner"></span>
   </div>
 </template>

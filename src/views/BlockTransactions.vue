@@ -34,13 +34,35 @@ onMounted(async () => {
 
   setLoadingTxns(true);
   blockNumber.value = route.params.block as string;
-  const block = await prov.call('eth_getBlockByNumber', blockNumber.value, true);
-  const transactions = getBlockTransactionsList(block);
-  totalTransactionsCount.value = transactions.length;
+  
+  try {
+    // Convert block number to hex format for RPC call
+    const blockNumberHex = '0x' + parseInt(blockNumber.value).toString(16);
+    const block = await prov.call('eth_getBlockByNumber', blockNumberHex, true);
+    
+    if (!block) {
+      warning.value = 'Block not found. Please check the block number.';
+      setTimeout(() => {
+        warning.value = '';
+      }, 7000);
+      setLoadingTxns(false);
+      return;
+    }
+    
+    const transactions = getBlockTransactionsList(block);
+    totalTransactionsCount.value = transactions.length;
 
-  detailsPagination.updateTransactions(transactions);
-  transactionsList.value = detailsPagination.showFirstPage();
-  updatePagesState(detailsPagination);
+    detailsPagination.updateTransactions(transactions);
+    transactionsList.value = detailsPagination.showFirstPage();
+    updatePagesState(detailsPagination);
+  } catch (error) {
+    console.error('Error loading block transactions:', error);
+    warning.value = 'Failed to load block transactions. Please check your connection and try again.';
+    setTimeout(() => {
+      warning.value = '';
+    }, 7000);
+  }
+  
   setLoadingTxns(false);
 });
 
@@ -113,6 +135,7 @@ const openPage = async (page: string) => {
     :warning="warning"
     :loadingPage="loadingPage"
     :paginationOn="false"
+    :ignoreOtsError="true"
     @openPage="openPage"
     :firstTabText="`In total ${totalTransactionsCount} txs found.`"
   />
